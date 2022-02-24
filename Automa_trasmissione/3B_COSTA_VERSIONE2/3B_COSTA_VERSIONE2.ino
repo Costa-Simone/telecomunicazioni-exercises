@@ -81,18 +81,33 @@ void loop() {
 
      case 3:
       somma = numero[0] ^ numero[1];
-     
-      for(int j = 2; j < N - 1; j++) {
-         somma ^= numero[j];
-      }
 
-      if(somma == 1) {
-        digitalWrite(TxPin, HIGH);
+      if(P == 'E') {
+         for(int j = 2; j < N - 1; j++) {
+          somma ^= numero[j];
+         }
+
+         if(somma == 1) {
+          digitalWrite(TxPin, HIGH);
+         }
+         else {
+          digitalWrite(TxPin, LOW);
+         }
       }
-      else {
-        digitalWrite(TxPin, LOW);
+      else if(P == 'O') {
+         somma = !somma;
+         for(int j = 2; j < N - 1; j++) {
+          somma ^= numero[j];
+         }
+
+         if(somma == 1) {
+          digitalWrite(TxPin, LOW);
+         }
+         else {
+          digitalWrite(TxPin, HIGH);
+         }
       }
-     
+    
       Sf = 4;
       
       delay(Tb);
