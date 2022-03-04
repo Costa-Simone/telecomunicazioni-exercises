@@ -9,7 +9,7 @@ int Tb = 50;
 char P = 'N';
 bool dato = true;
 int bit = 0;
-char Car = 'A';
+int Car = 'A';
 bool parita = false;
   
 void setup() {
@@ -38,7 +38,7 @@ void trasmetti() {
       break;
 
      case 2:
-      bit = ((Car &(i<<i)) != 0);
+      bit = ((Car &(1<<i)) != 0);
       digitalWrite(TxPin, bit);
       delay(Tb);
       parita ^= bit;
