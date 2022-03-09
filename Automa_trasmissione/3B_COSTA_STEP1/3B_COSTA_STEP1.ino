@@ -67,7 +67,7 @@ void trasmetti() {
       break;
 
      case 4:
-      digitalWrite(TxPin, LOW);
+      digitalWrite(TxPin, HIGH);
       if(i < S) {
         i++;
         delay(Tb);
