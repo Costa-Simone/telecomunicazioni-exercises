@@ -1,17 +1,16 @@
 #define TxPin 13
 
+const int S = 2;
+const int N =  8;
+const int Tb = 50;
+const char P = 'N';
+
 //variabili di stato
-int Sp = 0;
 int Sf = 0;
 
 //variabili di appoggio
 int i = 0;
-int S = 2;
-int N =  8;
-int Tb = 50;
-char P = 'N';
-bool dato = true;
-int bit = 0;
+bool bit = false;
 int Car = 'A';
 bool parita = false;
 unsigned long Tempo = 0; //memorizzare il tempo
@@ -19,7 +18,6 @@ unsigned long Tempo = 0; //memorizzare il tempo
 void setup() {
   pinMode(TxPin, OUTPUT);
   digitalWrite(TxPin, HIGH);
-  Sp = 0;
 }
 
 void loop() {
@@ -27,7 +25,8 @@ void loop() {
 }
 
 void trasmetti(char P) {
-  if(Tempo == 0 || millis() - Tempo >= Tb) {
+  static int Sp = 0;
+  if(Tempo == 0 || millis() > Tb + Tempo) {
     switch(Sp) {
     case 0:
       Tempo = 0;
@@ -37,7 +36,7 @@ void trasmetti(char P) {
       break;
      
      case 1:
-     Tempo = millis();
+      Tempo = millis();
       i = 0;
       digitalWrite(TxPin, LOW);
       Sf = 2;
@@ -81,7 +80,6 @@ void trasmetti(char P) {
       }
       break;
    }
-
    Sp = Sf;
   }
 }
