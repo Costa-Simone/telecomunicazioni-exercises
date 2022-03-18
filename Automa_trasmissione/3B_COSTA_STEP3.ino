@@ -5,9 +5,6 @@ const int N =  8;
 const int Tb = 50;
 const char P = 'N';
 
-//variabili di stato
-int Sf = 0;
-
 //variabili di appoggio
 int i = 0;
 bool bit = false;
@@ -26,6 +23,8 @@ void loop() {
 
 void trasmetti(char P) {
   static int Sp = 0;
+  static int Sf = 0;
+  static char C = Car;
   if(Tempo == 0 || millis() > Tb + Tempo) {
     switch(Sp) {
     case 0:
@@ -44,7 +43,7 @@ void trasmetti(char P) {
 
      case 2:
       Tempo += Tb;
-      bit = ((Car &(1<<i)) != 0);
+      bit = ((C & (1<<i)) != 0);
       digitalWrite(TxPin, bit);
       parita ^= bit;
       i++;
