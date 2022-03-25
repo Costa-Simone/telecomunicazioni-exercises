@@ -4,6 +4,9 @@ const int S = 2;
 const int N =  8;
 const int Tb = 50;
 const char P = 'N';
+const int attesa = 2000;
+
+bool Tx(char P);
 
 //variabili di appoggio
 int i = 0;
@@ -11,27 +14,34 @@ bool bit = false;
 int Car = 'A';
 bool parita = false;
 unsigned long Tempo = 0; //memorizzare il tempo
-  
+bool impegno = true;
+
 void setup() {
   pinMode(TxPin, OUTPUT);
   digitalWrite(TxPin, HIGH);
 }
 
 void loop() {
-  trasmetti(P);
+  if(impegno == true) {
+      impegno = Tx(P);
+  }
+  else {
+      Tempo += attesa;
+      impegno = true;
+  }
 }
 
-void trasmetti(char P) {
+bool Tx(char P) {
   static int Sp = 0;
   static int Sf = 0;
-  static char C = Car;
-  if(Tempo == 0 || millis() > Tb + Tempo) {
+  static char datoCatturato;
+  if(Tempo == 0 || millis() > Tempo + Tb) {
     switch(Sp) {
     case 0:
-      Tempo = 0;
       digitalWrite(TxPin, HIGH);
       Sf = 1;
       parita = false;
+      impegno = false;
       break;
      
      case 1:
@@ -39,11 +49,13 @@ void trasmetti(char P) {
       i = 0;
       digitalWrite(TxPin, LOW);
       Sf = 2;
+      datoCatturato = Car;
+      impegno = true;
       break;
 
      case 2:
       Tempo += Tb;
-      bit = ((C & (1<<i)) != 0);
+      bit = ((datoCatturato & (1<<i)) != 0);
       digitalWrite(TxPin, bit);
       parita ^= bit;
       i++;
@@ -55,6 +67,7 @@ void trasmetti(char P) {
         Sf = 3;
         i = 0;
       }
+      impegno = true;
       break;
 
      case 3:
@@ -67,6 +80,7 @@ void trasmetti(char P) {
         digitalWrite(TxPin, parita);
       }
       Sf = 4;
+      impegno = true;
       break;
 
      case 4:
@@ -77,8 +91,10 @@ void trasmetti(char P) {
       if(i == S) {
         Sf = 0;
       }
+      impegno = true;
       break;
    }
    Sp = Sf;
   }
+  return impegno;
 }
