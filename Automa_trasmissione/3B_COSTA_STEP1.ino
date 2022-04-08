@@ -1,62 +1,46 @@
 #define TxPin 13
 
-const int S = 2;
-const int N =  8;
-const int Tb = 50;
-const char P = 'N';
-const int attesa = 2000;
-
-bool Tx(char P);
-
-//variabili di appoggio
+int Sp = 0;
+int Sf = 0;
 int i = 0;
-bool bit = false;
+int S = 2;
+int N =  8;
+int Tb = 50;
+char P = 'N';
+bool dato = true;
+int bit = 0;
 int Car = 'A';
 bool parita = false;
-unsigned long Tempo = 0; //memorizzare il tempo
-bool impegno = true;
-
+  
 void setup() {
   pinMode(TxPin, OUTPUT);
   digitalWrite(TxPin, HIGH);
 }
 
 void loop() {
-  if(impegno == true) {
-      impegno = Tx(P);
-  }
-  else {
-      Tempo += attesa;
-      impegno = true;
-  }
+  trasmetti();
 }
 
-bool Tx(char P) {
-  static int Sp = 0;
-  static int Sf = 0;
-  static char datoCatturato;
-  if(Tempo == 0 || millis() > Tempo + Tb) {
+void trasmetti() {
+    while(dato) {
     switch(Sp) {
     case 0:
       digitalWrite(TxPin, HIGH);
+      delay(100);
       Sf = 1;
-      parita = false;
-      impegno = false;
       break;
      
      case 1:
-      Tempo = millis();
       i = 0;
       digitalWrite(TxPin, LOW);
+      delay(Tb);
       Sf = 2;
-      datoCatturato = Car;
-      impegno = true;
       break;
 
      case 2:
-      Tempo += Tb;
-      bit = ((datoCatturato & (1<<i)) != 0);
+      bit = ((Car &(1<<i)) != 0);
       digitalWrite(TxPin, bit);
+      delay(Tb);
       parita ^= bit;
       i++;
       if(i == N && P == 'N') {
@@ -67,34 +51,35 @@ bool Tx(char P) {
         Sf = 3;
         i = 0;
       }
-      impegno = true;
       break;
 
      case 3:
-      Tempo += Tb;
       if(P == 'E') {
         digitalWrite(TxPin, parita);
+        delay(Tb);
       }
       else if(P == 'O') {
         parita = !parita;
         digitalWrite(TxPin, parita);
+        delay(Tb);
       }
       Sf = 4;
-      impegno = true;
       break;
 
      case 4:
-      Tempo += Tb;
       digitalWrite(TxPin, HIGH);
-      i++;
-
-      if(i == S) {
+      if(i < S) {
+        i++;
+        delay(Tb);
+      }
+      else if(i == S) {
         Sf = 0;
       }
-      impegno = true;
+      delay(Tb);
+     
       break;
    }
+
    Sp = Sf;
   }
-  return impegno;
 }
