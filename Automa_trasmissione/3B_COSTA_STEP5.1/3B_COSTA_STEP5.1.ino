@@ -3,16 +3,17 @@
 #define Pin_Rx 2  //Input scelto da Arduino
 
 //Variabili di Trama
-#define s 2
+#define S 2
 #define N 8
 #define P 'E'
 #define Tb 50
-#define attesa 2000
+#define attesa 200
 
 //Variabili d'Appoggio
 char car = 'A';
 unsigned long Tempo = 0;  //Variabile per memorizzare il tempo
 bool impegno = true;
+char dato1 = '\0';
 
 void setup() {
   pinMode(Pin_Tx, OUTPUT);
@@ -21,14 +22,14 @@ void setup() {
   Serial.begin(9600);
 }
 
-bool Tx(char car);  //Prototipo Tx
-char Rx();  //Prototipo Rx
+bool txByte(char car);  //Prototipo Tx
+char rxByte();  //Prototipo Rx
 
 void loop() {
   //TRASMISSIONE
   if (impegno == true)
   {
-    impegno = Tx(car);
+    impegno = txByte(car);
   }
   else if (millis() > (attesa + Tb))
   {
@@ -37,25 +38,26 @@ void loop() {
   }
 
   //RICEZIONE
-  Rx();
+  if (rxByte() != '\0') {
+    //Serial.print();
+  }
 }
 
-bool Tx(char car) {
+bool txByte(char car) {
   //Variabili di Stato
   static int statoPresente = 0;
   static int statoFuturo = 0;
+  
   static char carAus;
-
   static bool bit = false;
   static int i = 0;
   static bool parita;
 
-  if (Tempo == 0 || millis() > Tempo + Tb) //Intercettore che ha validit�  di 50 giorni
-  {
-    switch (statoPresente)
-    {
+  if (Tempo == 0 || millis() > Tempo + Tb) { //Intercettore che ha validit�  di 50 giorni
+    switch (statoPresente) {
       case 0:
         digitalWrite(Pin_Tx, HIGH);
+        
         carAus = car;
         parita = false;
         statoFuturo = 1;
@@ -64,52 +66,60 @@ bool Tx(char car) {
 
       case 1:
         Tempo = millis();
-        digitalWrite(Pin_Tx, LOW);
         statoFuturo = 2;
         i = 0;
         impegno = true;
+        
+        digitalWrite(Pin_Tx, LOW);
         break;
 
       case 2:
         Tempo += Tb;
         bit = ((carAus & (1 << i)) != 0); //Estrazione bit dal byte
-        digitalWrite(Pin_Tx, bit);
         parita ^= bit;  //Aggiorno la parità ogni volta
         i++;
-        if (i == N)
-        {
+        
+        digitalWrite(Pin_Tx, bit);
+        
+        if (i == N) {
           i = 0;
-          if (P == 'N')
-          {
+          
+          if (P == 'N') {
             statoFuturo = 4;  //No bit di parità
           }
-          else
-          {
+          else {
             statoFuturo = 3;
           }
         }
+        
         impegno = true;
         break;
 
       case 3:
         Tempo += Tb;
+        
         if (P == 'O')
         {
           parita = !parita;
         }
+        
         digitalWrite(Pin_Tx, parita);
+        
         statoFuturo = 4;
         impegno = true;
         break;
 
       case 4:
         Tempo += Tb;
-        digitalWrite(Pin_Tx, HIGH);
         i++;
-        if (i == s)
+        
+        digitalWrite(Pin_Tx, HIGH);
+        
+        if (i == S)
         {
           statoFuturo = 5;
         }
+        
         impegno = true;
         break;
 
@@ -117,14 +127,14 @@ bool Tx(char car) {
         statoFuturo = 0;
         break;
     }
+    
     statoPresente = statoFuturo;
   }
+  
   return impegno;
 }
 
-char dato1 = '\0';
-
-char Rx() {
+char rxByte() {
   //Variabili di Stato
   static int statoPresente_Rx = 0;
   static int statoFuturo_Rx = 0;
@@ -135,37 +145,46 @@ char Rx() {
   static bool parita_Rx;
   static char datoCat = 0;
 
-  switch (statoPresente_Rx)
-  {
+  bool ricevuto = false;
+
+  bit = digitalRead(Pin_Rx); //prendo valore del bit
+
+  switch (statoPresente_Rx) {
     case 0:
-      if ((bitPrecedente) && (!bit))
+      if ((bitPrecedente) && (!bit)) {
         statoFuturo_Rx = 1;
+      }
+      
       break;
 
     case 1:
-      if (bit) //Se ho avuto un disturbo, rumore
+      if (bit) { //Se ho avuto un disturbo, rumore
         statoFuturo_Rx = 0;
-      else
+      }
+      else {
         statoFuturo_Rx = 2;
-      k = 0;
-      parita_Rx = false;
+        k = 0;
+        parita_Rx = false;
+      }
+
       break;
 
     case 2:
-      bit = digitalRead(Pin_Rx);
-      datoCat += int(bit) << k; //ricezione del bit
+      datoCat = ((bit) ? 1 : 0) << k; //ricezione del bit
       parita_Rx ^= bit; //Aggiorno la parità ogni volta
       k++;
-      if (k == N)
-      {
+      
+      if (k == N) {
         k = 0;
+      
         if (P == 'N') {
-          statoFuturo_Rx = 4; //No bit di parita'
-        }
-        else {
-          statoFuturo_Rx = 3;
-        }
+            statoFuturo_Rx = 4; //No bit di parita'
+          }
+          else {
+            statoFuturo_Rx = 3;
+          }
       }
+      
       break;
 
     case 3:
@@ -176,16 +195,19 @@ char Rx() {
       if (parita_Rx != digitalRead(Pin_Rx)) { //confronto tra le parita'
         datoCat = '\0';
       }
-      
+
       statoFuturo_Rx = 4;
       break;
 
     case 4:
-      k++;
-      
-      if (k == s)
-      {
+      if (!bit) {
+        datoCat = '\0';
+        k++;
+      }
+
+      if(k == S) {
         statoFuturo_Rx = 0;
+        ricevuto = true; //carattere ricevuto
       }
 
       break;
@@ -194,5 +216,9 @@ char Rx() {
   statoPresente_Rx = statoFuturo_Rx;  //Aggiornamento stato
   bitPrecedente = bit;  //Aggiornamento bit
 
-  return datoCat;
+  if(ricevuto) {
+    dato1 = datoCat;
+  }
+  
+  return dato1;
 }
