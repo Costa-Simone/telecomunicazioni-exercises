@@ -1,18 +1,20 @@
+//Pin utilizzato
 #define TxPin 13
 
+//Variabili di Trama
 const int S = 2;
 const int N =  8;
 const int Tb = 50;
 const char P = 'N';
 const int attesa = 2000;
 
-bool Tx();
+bool Tx(); //Prototipo Tx
 
-//variabili di appoggio
+//Variabili d'Appoggio
 bool bit = false;
 char mex[] = { 'C', 'O', 'S', 'T', 'A', '\n'};
 bool parita = false;
-unsigned long Tempo = 0; //memorizzare il tempo
+unsigned long Tempo = 0; //Variabile per memorizzare il tempo
 bool impegno = true; //variabile per verificare se automa sta trasmettendo
 
 void setup() {
@@ -21,6 +23,7 @@ void setup() {
 }
 
 void loop() {
+  //TRASMISSIONE
   if(Tx() == false && Tempo != 0) {
       Tempo += attesa;
       impegno = true;
@@ -28,12 +31,14 @@ void loop() {
 }
 
 bool Tx() {
+  //Variabili di Stato
   static int Sp = 0;
   static int Sf = 0;
+  
   static char datoCatturato;
   static int i = 0, j = 0;
   
-  if(Tempo == 0 || millis() > Tempo + Tb) {
+  if(Tempo == 0 || millis() > Tempo + Tb) { //Intercettore che ha validita'  di 50 giorni
     switch(Sp) {
     case 0: //idle
       digitalWrite(TxPin, HIGH);
@@ -60,13 +65,13 @@ bool Tx() {
 
      case 2: //trasmissione
       Tempo += Tb;
-      bit = ((datoCatturato & (1<<i)) != 0); //trasmissione del carattere attuale
+      bit = ((datoCatturato & (1<<i)) != 0); //Estrazione bit dal byte
       digitalWrite(TxPin, bit); //stampa del bit
       parita ^= bit;
       i++;
       
       if(i == N && P == 'N') {
-        Sf = 4;
+        Sf = 4; //No bit di parità
         i = 0; //azzeramento variabile posizione bit
       }
       else if(i == N && P != 'N') {

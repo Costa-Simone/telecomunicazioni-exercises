@@ -12,7 +12,7 @@
 //Variabili d'Appoggio
 char car = 'A';
 unsigned long Tempo = 0;  //Variabile per memorizzare il tempo
-bool impegno = true;
+bool impegno = true; //variabile per verificare se automa sta trasmettendo
 char dato1 = '\0';
 
 void setup() {
@@ -53,9 +53,9 @@ bool txByte(char car) {
   static int i = 0;
   static bool parita;
 
-  if (Tempo == 0 || millis() > Tempo + Tb) { //Intercettore che ha validit�  di 50 giorni
+  if (Tempo == 0 || millis() > Tempo + Tb) { //Intercettore che ha validita'  di 50 giorni
     switch (statoPresente) {
-      case 0:
+      case 0: // idle
         digitalWrite(Pin_Tx, HIGH);
         
         carAus = car;
@@ -65,7 +65,7 @@ bool txByte(char car) {
         break;
 
       case 1:
-        Tempo = millis();
+        Tempo = millis(); //porta tempo al ms attuale
         statoFuturo = 2;
         i = 0;
         impegno = true;
@@ -79,10 +79,10 @@ bool txByte(char car) {
         parita ^= bit;  //Aggiorno la parità ogni volta
         i++;
         
-        digitalWrite(Pin_Tx, bit);
+        digitalWrite(Pin_Tx, bit); //stampa del bit
         
         if (i == N) {
-          i = 0;
+          i = 0; //azzeramento variabile posizione bit
           
           if (P == 'N') {
             statoFuturo = 4;  //No bit di parità
@@ -95,7 +95,7 @@ bool txByte(char car) {
         impegno = true;
         break;
 
-      case 3:
+      case 3: // parita
         Tempo += Tb;
         
         if (P == 'O')
@@ -109,7 +109,7 @@ bool txByte(char car) {
         impegno = true;
         break;
 
-      case 4:
+      case 4: // stop
         Tempo += Tb;
         i++;
         
@@ -123,7 +123,7 @@ bool txByte(char car) {
         impegno = true;
         break;
 
-      case 5:
+      case 5: //azzeramento
         statoFuturo = 0;
         break;
     }

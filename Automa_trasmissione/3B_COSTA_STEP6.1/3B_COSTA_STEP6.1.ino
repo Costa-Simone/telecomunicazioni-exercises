@@ -14,7 +14,7 @@
 char car = 'A';
 unsigned long Tempo_Tx = 0;  //Variabile per memorizzare il tempo
 unsigned long Tempo_Rx = 0;
-bool impegno = true;
+bool impegno = true; //variabile per verificare se automa sta trasmettendo
 char dato1 = '\0';
 
 void setup() {
@@ -70,7 +70,7 @@ bool txByte(char car) {
         break;
 
       case 1: // start
-        Tempo_Tx = millis();
+        Tempo_Tx = millis(); //porta tempo al ms attuale
         statoFuturo = 2;
         i = 0;
         impegno = true;
@@ -84,10 +84,10 @@ bool txByte(char car) {
         parita ^= bit;  //Aggiorno la parità ogni volta
         i++;
         
-        digitalWrite(Pin_Tx, bit);
+        digitalWrite(Pin_Tx, bit); //stampa del bit
         
         if (i == N) {
-          i = 0;
+          i = 0; //azzeramento variabile posizione bit
           
           if (P == 'N') {
             statoFuturo = 4;  //No bit di parità
@@ -129,7 +129,7 @@ bool txByte(char car) {
         
         break;
 
-      case 5:
+      case 5: //azzeramento
         statoFuturo = 0;
         break;
     }
@@ -144,7 +144,6 @@ char rxByte() {
   //Variabili di Stato
   static int statoPresente_Rx = 0;
   static int statoFuturo_Rx = 0;
-
 
   static bool bitPrecedente = false;
   static int k = 0;

@@ -22,6 +22,7 @@ void setup() {
 }
 
 void loop() {
+  //TRASMISSIONE
 	if(impegno == true)
 	{
 		impegno = Tx(car);
@@ -43,7 +44,7 @@ bool Tx(char car){
 	{
 		switch(statoPresente)
 		{
-			case 0:
+			case 0: // idle
 				digitalWrite(pin, HIGH);
 				carAus = car;
 				parita = false;
@@ -51,7 +52,7 @@ bool Tx(char car){
 				impegno = false;
 				break;
 
-			case 1:
+			case 1: // idle
 				Tempo = millis();
 				digitalWrite(pin, LOW);
 				statoFuturo=2;
@@ -59,7 +60,7 @@ bool Tx(char car){
 				impegno = true;
 				break;
 
-			case 2:
+			case 2: // trasmissione
 				Tempo += Tb;
 				bit = ((carAus & (1<<i))!= 0);  //Estrazione bit dal byte
 				digitalWrite(pin, bit);
@@ -70,7 +71,7 @@ bool Tx(char car){
 					i = 0;
 					if(P == 'N')
 					{
-						statoFuturo = 4;
+						statoFuturo = 4; //No bit di parità
 					}
 					else
 					{
@@ -80,7 +81,7 @@ bool Tx(char car){
 				impegno = true;
 				break;
 
-			case 3:
+			case 3: // parita
 				Tempo += Tb;
 				if(P == 'O')
 				{
@@ -91,7 +92,7 @@ bool Tx(char car){
 				impegno = true;
 				break;
 
-			case 4:
+			case 4: // stop
 				Tempo += Tb;
 				digitalWrite(pin, HIGH);
 				i++;

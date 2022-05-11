@@ -1,5 +1,7 @@
+//Pin utilizzato
 #define TxPin 13
 
+//Variabili di Trama
 const int S = 2;
 const int N =  8;
 const int Tb = 50;
@@ -8,13 +10,13 @@ const int attesa = 2000;
 
 bool Tx(char mex[]);
 
-//variabili di appoggio
+//Variabili d'Appoggio
 int i = 0;
 int j = 0;
 bool bit = false;
-char mex[] = { 'C', 'O', 'S', 'T', 'A', '\0'};
+char mex[] = { 'C', 'O', 'S', 'T', 'A', '\0'}; // Stringa da trasmettere
 bool parita = false;
-unsigned long Tempo = 0; //memorizzare il tempo
+unsigned long Tempo = 0; //Variabile per memorizzare il tempo
 bool impegno = true;
 
 void setup() {
@@ -23,6 +25,7 @@ void setup() {
 }
 
 void loop() {
+  //TRASMISSIONE
   if(impegno == true) {
       impegno = Tx(mex);
   }
@@ -33,19 +36,22 @@ void loop() {
 }
 
 bool Tx(char mex[]) {
+  //Variabili di Stato
   static int Sp = 0;
   static int Sf = 0;
+  
   static char datoCatturato;
-  if(Tempo == 0 || millis() > Tempo + Tb) {
+  
+  if(Tempo == 0 || millis() > Tempo + Tb) { //Intercettore che ha validita'  di 50 giorni
     switch(Sp) {
-    case 0:
+    case 0: // idle
       digitalWrite(TxPin, HIGH);
       Sf = 1;
       parita = false;
       impegno = false;
       break;
      
-     case 1:
+     case 1: // start
       Tempo = millis();
       i = 0;
       digitalWrite(TxPin, LOW);
@@ -54,14 +60,14 @@ bool Tx(char mex[]) {
       impegno = true;
       break;
 
-     case 2:
+     case 2: // trasmissione
       Tempo += Tb;
-      bit = ((datoCatturato & (1<<i)) != 0);
+      bit = ((datoCatturato & (1<<i)) != 0); //Estrazione bit dal byte
       digitalWrite(TxPin, bit);
-      parita ^= bit;
+      parita ^= bit; //Aggiorno la parità ogni volta
       i++;
       if(i == N && P == 'N') {
-        Sf = 4;
+        Sf = 4; //No bit di parità
         i = 0;
       }
       else if(i == N && P != 'N') {
@@ -71,7 +77,7 @@ bool Tx(char mex[]) {
       impegno = true;
       break;
 
-     case 3:
+     case 3: // parita
       Tempo += Tb;
       if(P == 'E') {
         digitalWrite(TxPin, parita);
@@ -84,7 +90,7 @@ bool Tx(char mex[]) {
       impegno = true;
       break;
 
-     case 4:
+     case 4: // stop
       Tempo += Tb;
       digitalWrite(TxPin, HIGH);
       i++;
