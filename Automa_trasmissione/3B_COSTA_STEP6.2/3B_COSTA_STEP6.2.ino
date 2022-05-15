@@ -11,11 +11,12 @@
 #define attesa 200
 
 //Variabili d'Appoggio
-char mex[] = { 'C', 'O', 'S', 'T', 'A', '\0' }; // Stringa da trasmettere
+char mex[] = { 'C', 'O', 'S', 'T', 'A', '\n' }; // Stringa da trasmettere
 unsigned long Tempo_Tx = 0;  //Variabile per memorizzare il tempo
 unsigned long Tempo_Rx = 0;
 bool impegno = true; //variabile per verificare se automa sta trasmettendo
 char dato1 = '\0';
+bool duplicato = true;
 
 void setup() {
   pinMode(Pin_Tx, OUTPUT);
@@ -41,9 +42,11 @@ void loop() {
 
   dato1 = rxByte();
   //RICEZIONE
-  if (dato1 != '\0') {
+  if (dato1 != '\0' && duplicato) {
     Serial.print(dato1);
   }
+
+  duplicato = false;
 }
 
 bool txByte(char mex[]) {
@@ -122,7 +125,7 @@ bool txByte(char mex[]) {
           statoFuturo = 5;
           j++;
 
-          if(carAus == '\0') {
+          if(carAus == '\n') {
             j = 0;
           }
         }
@@ -133,6 +136,7 @@ bool txByte(char mex[]) {
 
       case 5: //azzeramento
         statoFuturo = 0;
+        duplicato = true;
         break;
     }
     

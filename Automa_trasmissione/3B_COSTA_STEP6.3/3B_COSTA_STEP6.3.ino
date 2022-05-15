@@ -8,7 +8,7 @@
 #define N 8
 #define P 'E'
 #define Tb 50
-#define attesa 200
+#define attesa 2000
 
 //Variabili d'Appoggio
 char mex[] = { 'C', 'O', 'S', 'T', 'A', '\n' }; // Stringa da trasmettere
@@ -16,6 +16,7 @@ unsigned long Tempo_Tx = 0;  //Variabile per memorizzare il tempo
 unsigned long Tempo_Rx = 0;
 bool impegno = true; //variabile per verificare se automa sta trasmettendo
 char dato1 = '\0';
+bool duplicato = true;
 
 void setup() {
   pinMode(Pin_Tx, OUTPUT);
@@ -31,16 +32,21 @@ char rxByte();  //Prototipo Rx
 
 void loop() {
   //TRASMISSIONE
-  if (txByte() == false && Tempo_Tx != 0) {
-      Tempo_Tx += attesa;
-      impegno = true;
+  if (impegno == true) {
+    impegno = txByte();
+  }
+  else if (millis() > (attesa + Tb)) {
+    Tempo_Tx += attesa;
+    impegno = true;
   }
 
   dato1 = rxByte();
   //RICEZIONE
-  if (dato1 != '\0') {
+  if (dato1 != '\0' && duplicato) {
     Serial.print(dato1);
   }
+
+  duplicato = false;
 }
 
 bool txByte() {
@@ -54,14 +60,20 @@ bool txByte() {
   static int j = 0;
   static bool parita;
 
-  if (Tempo_Tx == millis() || millis() > Tempo_Tx + Tb) { //Intercettore che ha validita'  di 50 giorni
+  if (Tempo_Tx == 0 || millis() > Tempo_Tx + Tb) { //Intercettore che ha validita'  di 50 giorni
     switch (statoPresente) {
       case 0: // idle
         digitalWrite(Pin_Tx, HIGH);
         
         parita = false;
         statoFuturo = 1;
-        impegno = false;
+
+        if(j == 0) {
+          impegno = false;
+        }
+        else {
+          impegno = true;
+        }
         break;
 
       case 1: // start
@@ -128,10 +140,12 @@ bool txByte() {
         impegno = true;
         Tempo_Tx += Tb;
         statoFuturo = 0;
+        duplicato = true;
         
         if(carAus == '\n') {
             j = 0;
         }
+        
         break;
     }
     
